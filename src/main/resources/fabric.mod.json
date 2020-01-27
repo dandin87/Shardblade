@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "shardblade",
+  "version": "1.0.0",
+
+  "name": "Shardblade",
+  "description": "Insert description here.",
+  "authors": [
+    "Valoeghese"
+  ],
+
+  "license": "LGPLv3",
+  "environment": "*",
+
+  "entrypoints": {
+    "main": [
+       "tk.valoeghese.shardblade.ShardbladeMod"
+    ]
+  },
+
+  "requires": {
+    "fabricloader": ">=0.4.0"
+  },
+
+  "mixins": [
+    "shardblade.mixins.json"
+  ]
+}
