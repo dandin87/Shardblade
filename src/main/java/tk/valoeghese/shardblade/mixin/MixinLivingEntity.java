@@ -1,8 +1,5 @@
 package tk.valoeghese.shardblade.mixin;
 
-import java.util.Optional;
-import java.util.function.Function;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -38,12 +35,17 @@ public class MixinLivingEntity implements IShardbladeAffectedEntity {
 		shardbladeData.putInt("schema", SHARDBLADE_SCHEMA_LATEST);
 		shardbladeData.putBoolean("incapacitatedByShardblade", this.incapacitatedByShardblade);
 
-		tag.put("shardblade", tag);
+		tag.put("shardblade", shardbladeData);
 	}
 
 	@Override
 	public boolean isIncapacitatedByShardblade() {
 		return this.incapacitatedByShardblade;
+	}
+
+	@Override
+	public void setIncapacitatedByShardblade(boolean value) {
+		this.incapacitatedByShardblade = value;
 	}
 
 	private static final int SHARDBLADE_SCHEMA_LATEST = 0;
