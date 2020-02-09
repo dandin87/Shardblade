@@ -1,4 +1,4 @@
-package tk.valoeghese.shardblade.surgebinding;
+package tk.valoeghese.shardblade.mechanics.surgebinding;
 
 public enum Surge {
 	ADHESION,

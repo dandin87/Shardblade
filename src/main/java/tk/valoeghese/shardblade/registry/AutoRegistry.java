@@ -1,9 +1,6 @@
 package tk.valoeghese.shardblade.registry;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,8 +14,6 @@ import net.fabricmc.loader.api.metadata.CustomValue;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.biome.Biome;
 import tk.valoeghese.shardblade.ShardbladeMod;
 
@@ -103,46 +98,5 @@ public class AutoRegistry {
 				mods.put(pkg.getAsString().replace(".", "\\.") + ".*", meta.getId());
 			}
 		});
-	}
-}
-
-class RegistryDataEntry {
-	RegistryDataEntry(String id, Class<?> clazz) {
-		this.id = id;
-		this.modid = AutoRegistry.computeModid(clazz);
-		this.clazz = clazz;
-	}
-
-	void register(RegistryType registryType) {
-		Identifier identifier = new Identifier(this.modid, this.id);
-		Object instance;
-		try {
-			instance = clazz.newInstance();
-			register.invoke(null, registryType.registry, identifier, instance);
-			Field toSet = registryType.fields.get(identifier.toString());
-
-			if (toSet != null) {
-				Field modifiersField = Field.class.getDeclaredField("modifiers");
-				modifiersField.setAccessible(true);
-				modifiersField.setInt(toSet, toSet.getModifiers() & ~Modifier.FINAL);
-				toSet.set(null, instance);
-			}
-		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchFieldException | SecurityException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	Class<?> clazz;
-	String id;
-	String modid;
-
-	private static final Method register;
-
-	static {
-		try {
-			register = Registry.class.getMethod("register", Registry.class, Identifier.class, Object.class);
-		} catch (NoSuchMethodException | SecurityException e) {
-			throw new RuntimeException(e);
-		}
 	}
 }

@@ -15,7 +15,6 @@ public class ShardbladeMod implements ModInitializer {
 	public void onInitialize() {
 		AutoRegistry.addListClass(ShardbladeItems.class);
 		AutoRegistry.register();
-		System.out.println(ShardbladeItems.HONORBLADE);
 	}
 
 	public static Identifier id(String name) {

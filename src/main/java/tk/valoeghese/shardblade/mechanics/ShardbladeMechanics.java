@@ -1,18 +1,21 @@
-package tk.valoeghese.shardblade.mixinimpl;
+package tk.valoeghese.shardblade.mechanics;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Hand;
 import tk.valoeghese.shardblade.item.IShardblade;
 
-public final class ShardbladeMixinImpl {
-	private ShardbladeMixinImpl() {
+public final class ShardbladeMechanics {
+	private ShardbladeMechanics() {
 	}
 
 	public static boolean onAttack(PlayerEntity self, Entity target) {
@@ -46,5 +49,13 @@ public final class ShardbladeMixinImpl {
 		}
 
 		return false;
+	}
+
+	public static <T> Optional<T> readDevelopmentData(CompoundTag tag, String name, Function<String, T> retrieval) {
+		if (tag.contains(name)) {
+			return Optional.of(retrieval.apply(name));
+		} else {
+			return Optional.empty();
+		}
 	}
 }
