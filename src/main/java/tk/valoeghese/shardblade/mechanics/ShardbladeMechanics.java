@@ -6,6 +6,9 @@ import java.util.function.Function;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffectType;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -13,7 +16,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Hand;
-import net.minecraft.world.World;
 import tk.valoeghese.shardblade.item.IShardblade;
 
 public final class ShardbladeMechanics {
@@ -30,7 +32,9 @@ public final class ShardbladeMechanics {
 				List<LivingEntity> list = self.world.getNonSpectatingEntities(LivingEntity.class, target.getBoundingBox().expand(1.0D, 0.25D, 1.0D));
 
 				if (target instanceof LivingEntity) {
-					list.add((LivingEntity) target);
+					if (!list.contains(target)) { // should be false
+						list.add((LivingEntity) target);
+					}
 				} else {
 					target.kill();
 				}
@@ -64,6 +68,7 @@ public final class ShardbladeMechanics {
 							double z = target.getZ();
 							spawnSmoke(x, y, z, (ServerWorld) self.world);
 
+							le.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 999999, 40, false, true));
 							((IShardbladeAffectedEntity) le).setIncapacitatedByShardblade(true);
 						}
 					});
