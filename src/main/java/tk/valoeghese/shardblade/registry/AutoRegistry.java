@@ -25,7 +25,9 @@ import tk.valoeghese.shardblade.ShardbladeMod;
 public class AutoRegistry {
 	public static void register() {
 		collectRegistrables();
-		registerItems();
+		registerAll(RegistryType.ITEM);
+		registerAll(RegistryType.BLOCK);
+		registerAll(RegistryType.BIOME);
 	}
 
 	public static void addListClass(Class<?> clazz) {
@@ -42,14 +44,14 @@ public class AutoRegistry {
 		}
 	}
 
-	private static void registerItems() {
-		byte[] priorities = RegistryType.ITEM.registerables.keySet().toByteArray();
+	private static void registerAll(RegistryType registry) {
+		byte[] priorities = registry.registerables.keySet().toByteArray();
 		Arrays.sort(priorities);
 
 		for (byte b : priorities) {
-			List<RegistryDataEntry> list = RegistryType.ITEM.registerables.get(b);
+			List<RegistryDataEntry> list = registry.registerables.get(b);
 			for (RegistryDataEntry registerable : list) {
-				registerable.register(RegistryType.ITEM);
+				registerable.register(registry);
 			}
 		}
 	}
