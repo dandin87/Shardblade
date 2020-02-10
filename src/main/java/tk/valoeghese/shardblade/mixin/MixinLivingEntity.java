@@ -52,7 +52,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 
 			switch (schema) {
 			case 0:
-				this.incapacitatedByShardblade = shardbladeData.getBoolean("incapacitatedByShardblade");
+				this.incapacitatedByShardblade = shardbladeData.getBoolean("IncapacitatedByShardblade");
 				this.wrGravityX = shardbladeData.getFloat("GravityX");
 				this.wrGravityY = shardbladeData.getFloat("GravityY");
 				this.wrGravityZ = shardbladeData.getFloat("GravityZ");
