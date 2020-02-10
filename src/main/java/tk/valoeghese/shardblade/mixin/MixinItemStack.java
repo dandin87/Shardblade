@@ -3,7 +3,6 @@ package tk.valoeghese.shardblade.mixin;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -22,8 +21,12 @@ public class MixinItemStack implements IItemstackSurgebinder {
 	@Final
 	private Item item;
 
-	@Unique
-	private SurgebindingOrder order = null;
+	private SurgebindingOrder surgebindingOrder;
+
+	@Shadow
+	private CompoundTag getOrCreateTag() {
+		throw new RuntimeException("Error failed in shadowing method ItemStack#getOrCreateTag");
+	}
 
 	@Inject(method = "fromTag", at = @At("RETURN"))
 	private static void loadTagData(CompoundTag tag, CallbackInfoReturnable<ItemStack> info) {
@@ -50,11 +53,28 @@ public class MixinItemStack implements IItemstackSurgebinder {
 
 	@Override
 	public SurgebindingOrder getOrder() {
-		return this.order;
+		if (this.item instanceof HonorBlade) {
+			if (this.surgebindingOrder == null) {
+				SurgebindingOrder result = SurgebindingOrder.byId(this.getOrCreateTag().getByte("order"));
+				this.surgebindingOrder = result;
+				return this.surgebindingOrder;
+			} else {
+				return this.surgebindingOrder;
+			}
+		}
+
+		return null;
 	}
 
 	@Override
 	public void setOrder(SurgebindingOrder order) {
-		this.order = order;
+		if (this.item instanceof HonorBlade) {
+			if (order == null) {
+				order = SurgebindingOrder.NONE;
+			}
+
+			this.getOrCreateTag().putByte("order", order.id);
+			this.surgebindingOrder = order;
+		}
 	}
 }

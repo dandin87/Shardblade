@@ -1,8 +1,6 @@
 package tk.valoeghese.shardblade.mechanics;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -11,7 +9,6 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Hand;
@@ -82,13 +79,5 @@ public final class ShardbladeMechanics {
 
 	private static void spawnSmoke(double x, double y, double z, ServerWorld world) {
 		world.spawnParticles(ParticleTypes.SMOKE, x, y, z, 15, 0.0D, 0.1D, 0.0D, 0.02D);
-	}
-
-	public static <T> Optional<T> readDevelopmentData(CompoundTag tag, String name, Function<String, T> retrieval) {
-		if (tag.contains(name)) {
-			return Optional.of(retrieval.apply(name));
-		} else {
-			return Optional.empty();
-		}
 	}
 }
