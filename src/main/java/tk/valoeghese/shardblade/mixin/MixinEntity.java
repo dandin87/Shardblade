@@ -152,124 +152,36 @@ public abstract class MixinEntity {
 		}
 	}
 
-	@Shadow
-	private float calculateNextStepSoundDistance() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
+	@Shadow abstract protected float calculateNextStepSoundDistance();
+	@Shadow abstract protected Entity getPrimaryPassenger();
+	@Shadow abstract protected boolean hasPassengers();
+	@Shadow abstract protected float playFlySound(float distance);
+	@Shadow abstract protected void playSwimSound(float volume);
+	@Shadow abstract protected boolean isTouchingWater();
+	@Shadow private static double squaredHorizontalLength(Vec3d vec3d) {
+		throw new RuntimeException("Failed to shadow method in MixinEntity");
 	}
-	@Shadow
-	private Entity getPrimaryPassenger() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private boolean hasPassengers() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private float playFlySound(float distance) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private void playSwimSound(float volume) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private boolean isTouchingWater() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private static double squaredHorizontalLength(Vec3d vec3d) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private boolean hasVehicle() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private boolean canClimb() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private boolean bypassesSteppingEffects() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private void playStepSound(BlockPos blockPos, BlockState blockState) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private boolean hasWings() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private void populateCrashReport(CrashReportSection crashReportSection) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private void setVelocity(double d, double y, double z) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private void fall(double y, boolean onGround2, BlockState blockState, BlockPos blockPos) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private float getVelocityMultiplier() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private BlockPos getLandingPos() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	protected void checkBlockCollision() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private void playSound(SoundEvent sound, float volume, float pitch) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private Vec3d adjustMovementForCollisions(Vec3d movement) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private boolean isWet() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private boolean isOnFire() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private Vec3d getVelocity() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private int getBurningDuration() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private Vec3d adjustMovementForSneaking(Vec3d movement, MovementType type) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private void setVelocity(Vec3d vec) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private void setBoundingBox(Box box) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private Vec3d adjustMovementForPiston(Vec3d movement) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private void moveToBoundingBoxCenter() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
-	@Shadow
-	private Box getBoundingBox() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinEntity");
-	}
+	@Shadow abstract protected boolean hasVehicle();
+	@Shadow abstract protected boolean canClimb();
+	@Shadow abstract protected boolean bypassesSteppingEffects();
+	@Shadow abstract protected void playStepSound(BlockPos blockPos, BlockState blockState);
+	@Shadow abstract protected boolean hasWings();
+	@Shadow abstract protected void populateCrashReport(CrashReportSection crashReportSection);
+	@Shadow abstract protected void setVelocity(double d, double y, double z);
+	@Shadow abstract protected void fall(double y, boolean onGround2, BlockState blockState, BlockPos blockPos);
+	@Shadow abstract protected float getVelocityMultiplier();
+	@Shadow abstract protected BlockPos getLandingPos();
+	@Shadow abstract protected void checkBlockCollision();
+	@Shadow abstract protected void playSound(SoundEvent sound, float volume, float pitch);
+	@Shadow abstract protected Vec3d adjustMovementForCollisions(Vec3d movement);
+	@Shadow abstract protected boolean isWet();
+	@Shadow abstract protected boolean isOnFire();
+	@Shadow abstract protected Vec3d getVelocity();
+	@Shadow abstract protected int getBurningDuration();
+	@Shadow abstract protected Vec3d adjustMovementForSneaking(Vec3d movement, MovementType type);
+	@Shadow abstract protected void setVelocity(Vec3d vec);
+	@Shadow abstract protected void setBoundingBox(Box box);
+	@Shadow abstract protected Vec3d adjustMovementForPiston(Vec3d movement);
+	@Shadow abstract protected void moveToBoundingBoxCenter();
+	@Shadow abstract protected Box getBoundingBox();
 }

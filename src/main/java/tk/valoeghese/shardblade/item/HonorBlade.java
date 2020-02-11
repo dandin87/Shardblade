@@ -40,7 +40,8 @@ public class HonorBlade extends ShardbladeBase {
 
 		if (order != null) {
 			if (order.hasSurge(Surge.GRAVITATION)) {
-				WindrunningSurgeImpl.changeGravity(user, user.getRotationVector());
+				// * 0.017453292F if doing builtin mc maths since mc uses radians
+				WindrunningSurgeImpl.changeGravity(user, user.getRotationVector(), user.yaw, user.pitch);
 			}
 		}
 

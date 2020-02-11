@@ -43,6 +43,9 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 	private float wrGravityX = 0.0f; // wr = windrunner, since 3d gravity was made for windrunning
 	private float wrGravityY = -0.08f;
 	private float wrGravityZ = 0.0f;
+	private float wrCurrentGravity = 0.08f;
+	private float wrCurrentYaw = 0;
+	private float wrCurrentPitch = 90;
 
 	@Shadow private float lastLimbDistance;
 	@Shadow private float limbDistance;
@@ -75,6 +78,9 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 				this.wrGravityX = shardbladeData.getFloat("GravityX");
 				this.wrGravityY = shardbladeData.getFloat("GravityY");
 				this.wrGravityZ = shardbladeData.getFloat("GravityZ");
+				this.wrCurrentGravity = shardbladeData.getFloat("ScalarGravity");
+				this.wrCurrentPitch = shardbladeData.getFloat("GravityPitch");
+				this.wrCurrentYaw = shardbladeData.getFloat("GravityYaw");
 				break;
 			}
 		}
@@ -88,6 +94,9 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 		shardbladeData.putFloat("GravityX", this.wrGravityX);
 		shardbladeData.putFloat("GravityY", this.wrGravityY);
 		shardbladeData.putFloat("GravityZ", this.wrGravityZ);
+		shardbladeData.putFloat("ScalarGravity", this.wrCurrentGravity);
+		shardbladeData.putFloat("GravityPitch", this.wrCurrentPitch);
+		shardbladeData.putFloat("GravityYaw", this.wrCurrentYaw);
 
 		tag.put("Shardblade", shardbladeData);
 	}
@@ -103,7 +112,8 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 	}
 
 	@Overwrite
-	public void travel(Vec3d movementInput) {
+	public void travel(Vec3d rawMovementInput) {
+		Vec3d movementInput = WindrunningSurgeImpl.rotate(rawMovementInput, this.wrCurrentPitch, this.wrCurrentYaw, this.wrCurrentGravity);
 		LivingEntity self = (LivingEntity) (Object) this;
 		double vanillaGravity;
 		double gravityMultiplier = 1D;
@@ -121,6 +131,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 			double e;
 			float horizontalMovementMultiplier;
 			double swimUpVelocity;
+
 			if (!this.isTouchingWater() || self instanceof PlayerEntity && ((PlayerEntity) self).abilities.flying) {
 				if (this.isInLava() && (!(self instanceof PlayerEntity) || !((PlayerEntity) self).abilities.flying)) {
 					e = this.getY();
@@ -138,6 +149,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 					}
 				} else if (this.isFallFlying()) {
 					Vec3d vec3d5 = this.getVelocity();
+
 					if (vec3d5.y > -0.5D) {
 						this.fallDistance = 1.0F;
 					}
@@ -410,7 +422,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 	@Shadow
 	private float getBaseMovementSpeedMultiplier() {
 		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
+ 	}
 	@Shadow
 	private float getMovementSpeed() {
 		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
@@ -448,12 +460,17 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
 	}
 
-	public void setGravitation(float x, float y, float z) {
+	@Override
+	public void setGravitation(float x, float y, float z, float gravityCache, float yawCache, float pitchCache) {
 		this.wrGravityX = x;
 		this.wrGravityY = y;
 		this.wrGravityZ = z;
+		this.wrCurrentGravity = gravityCache;
+		this.wrCurrentYaw = yawCache;
+		this.wrCurrentPitch = pitchCache;
 	}
 
+	@Override
 	public float[] getGravitation() {
 		return new float[] {this.wrGravityX, this.wrGravityY, this.wrGravityZ};
 	}
