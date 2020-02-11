@@ -120,7 +120,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 
 			double e;
 			float horizontalMovementMultiplier;
-			double j;
+			double swimUpVelocity;
 			if (!this.isTouchingWater() || self instanceof PlayerEntity && ((PlayerEntity) self).abilities.flying) {
 				if (this.isInLava() && (!(self instanceof PlayerEntity) || !((PlayerEntity) self).abilities.flying)) {
 					e = this.getY();
@@ -146,9 +146,9 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 					horizontalMovementMultiplier = this.pitch * 0.017453292F;
 					double m = Math.sqrt(vec3d6.x * vec3d6.x + vec3d6.z * vec3d6.z);
 					double n = Math.sqrt(squaredHorizontalLength(vec3d5));
-					j = vec3d6.length();
+					swimUpVelocity = vec3d6.length();
 					float p = MathHelper.cos(horizontalMovementMultiplier);
-					p = (float)((double)p * (double)p * Math.min(1.0D, j / 0.4D));
+					p = (float)((double)p * (double)p * Math.min(1.0D, swimUpVelocity / 0.4D));
 					vec3d5 = this.getVelocity().add(0.0D, vanillaGravity * (-1.0D + (double)p * 0.75D), 0.0D);
 					double s;
 					if (vec3d5.y < 0.0D && m > 0.0D) {
@@ -180,7 +180,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 					if (this.onGround && !this.world.isClient) {
 						this.setFlag(7, false);
 					}
-				} else { // This is the code we're interested in
+				} else { // This is the main falling code
 					BlockPos blockPos = this.getVelocityAffectingPos();
 					float blockSlipperiness = this.world.getBlockState(blockPos).getBlock().getSlipperiness();
 					horizontalMovementMultiplier = this.onGround ? blockSlipperiness * 0.91F : 0.91F;
@@ -240,14 +240,14 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 				this.setVelocity(vec3d.multiply((double)horizontalMovementMultiplier, 0.800000011920929D, (double)horizontalMovementMultiplier));
 				Vec3d vec3d2;
 				if (!this.hasNoGravity() && !this.isSprinting()) {
-					vec3d2 = this.getVelocity();
+					vec3d2 = this.getVelocity(); // also this
 					if (bl && Math.abs(vec3d2.y - 0.005D) >= 0.003D && Math.abs(vec3d2.y - vanillaGravity / 16.0D) < 0.003D) {
-						j = -0.003D;
+						swimUpVelocity = -0.003D;
 					} else {
-						j = vec3d2.y - vanillaGravity / 16.0D;
+						swimUpVelocity = vec3d2.y - vanillaGravity / 16.0D;
 					}
 
-					this.setVelocity(vec3d2.x, j, vec3d2.z);
+					this.setVelocity(vec3d2.x, swimUpVelocity, vec3d2.z);
 				}
 
 				vec3d2 = this.getVelocity();
@@ -280,7 +280,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 		jumpVelocity *= -12.5f;
 
 		Vec3d currentVelocity = this.getVelocity();
-		Vec3d jumpVector = new Vec3d(this.wrGravityX * jumpVelocity, this.wrGravityY * jumpVelocity, -this.wrGravityZ * jumpVelocity);
+		Vec3d jumpVector = new Vec3d(this.wrGravityX * jumpVelocity, this.wrGravityY * jumpVelocity, this.wrGravityZ * jumpVelocity);
 		WindrunningSurgeImpl.jump(currentVelocity, jumpVector, (LivingEntity) (Object) this);
 
 		this.velocityDirty = true;
