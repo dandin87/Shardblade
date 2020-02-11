@@ -31,7 +31,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import tk.valoeghese.shardblade.item.HonorBlade;
-import tk.valoeghese.shardblade.item.IShardblade;
 import tk.valoeghese.shardblade.mechanics.IShardbladeAffectedEntity;
 import tk.valoeghese.shardblade.mechanics.surgebinding.ISurgebinder;
 import tk.valoeghese.shardblade.mechanics.surgebinding.Surge;
@@ -108,7 +107,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 		tag.put("Shardblade", shardbladeData);
 	}
 
-	@Inject(at = @At("HEAD"), method = "handleFallDamagw")
+	@Inject(at = @At("HEAD"), method = "handleFallDamage", cancellable = true)
 	private void reduceSurgebinderFallDamage(float fallDistance, float damageMultiplier, CallbackInfoReturnable<Boolean> cir) {
 		LivingEntity self = (LivingEntity) (Object) this;
 
