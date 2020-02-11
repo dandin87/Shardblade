@@ -18,14 +18,19 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.Fluid;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.tag.FluidTags;
+import net.minecraft.tag.Tag;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import tk.valoeghese.shardblade.mechanics.IShardbladeAffectedEntity;
 import tk.valoeghese.shardblade.mechanics.surgebinding.windrunning.IWindrunnerGravity;
+import tk.valoeghese.shardblade.mechanics.surgebinding.windrunning.WindrunningSurgeImpl;
 
 @Mixin(LivingEntity.class)
 public abstract class MixinLivingEntity extends Entity implements IShardbladeAffectedEntity, IWindrunnerGravity {
@@ -43,6 +48,20 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 	@Shadow private float limbDistance;
 	@Shadow private float limbAngle;
 	@Shadow private boolean jumping;
+	@Shadow private int pushCooldown;
+	@Shadow private int jumpingCooldown;
+	@Shadow private float sidewaysSpeed;
+	@Shadow private float forwardSpeed;
+	@Shadow private float upwardSpeed;
+	@Shadow private int bodyTrackingIncrements;
+	@Shadow private double serverX;
+	@Shadow private double serverY;
+	@Shadow private double serverZ;
+	@Shadow private double serverYaw;
+	@Shadow private double serverPitch;
+	@Shadow private double serverHeadYaw;
+	@Shadow private int headTrackingIncrements;
+	@Shadow private float headYaw;
 
 	@Inject(at = @At("RETURN"), method = "readCustomDataFromTag")
 	private void injectReadData(CompoundTag tag, CallbackInfo info) {
@@ -185,9 +204,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 						} else {
 							vectorY = 0.0D;
 						}
-					} /*else if (!this.hasNoGravity()) { // Mojang Gravity
-						vectorY -= fallAcceleration;
-					} */
+					}
 
 					this.setVelocity((vec3d7.x + (this.wrGravityX * gravityMultiplier)) * (double)horizontalMovementMultiplier, (vectorY + (this.wrGravityY * gravityMultiplier)) * 0.98D, (vec3d7.z + (this.wrGravityZ * gravityMultiplier)) * (double)horizontalMovementMultiplier);
 				}
@@ -253,24 +270,143 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 		this.limbAngle += this.limbDistance;
 	}
 
-	/* @Inject(at = @At("HEAD"), method = "fall", cancellable = true)
-	private void addWindrunning(double heightDifference, boolean onGround, BlockState landedState, BlockPos landedPosition, CallbackInfo info) {
-		if (!this.isTouchingWater()) {
-			this.checkWaterState();
+	@Overwrite
+	public void jump() {
+		float jumpVelocity = this.getJumpVelocity();
+		if (this.hasStatusEffect(StatusEffects.JUMP_BOOST)) {
+			jumpVelocity += 0.1F * (float)(this.getStatusEffect(StatusEffects.JUMP_BOOST).getAmplifier() + 1);
 		}
 
-		if (!this.world.isClient && this.fallDistance > 3.0F && onGround) {
-			float f = (float)MathHelper.ceil(this.fallDistance - 3.0F);
-			if (!landedState.isAir()) {
-				double d = Math.min((double)(0.2F + f / 15.0F), 2.5D);
-				int i = (int)(150.0D * d);
-				((ServerWorld)this.world).spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, landedState), this.getX(), this.getY(), this.getZ(), i, 0.0D, 0.0D, 0.0D, 0.15000000596046448D);
+		jumpVelocity *= -12.5f;
+
+		Vec3d currentVelocity = this.getVelocity();
+		Vec3d jumpVector = new Vec3d(this.wrGravityX * jumpVelocity, this.wrGravityY * jumpVelocity, -this.wrGravityZ * jumpVelocity);
+		WindrunningSurgeImpl.jump(currentVelocity, jumpVector, (LivingEntity) (Object) this);
+
+		this.velocityDirty = true;
+	}
+
+	public void tickMovement() {
+		if (this.jumpingCooldown > 0) {
+			--this.jumpingCooldown;
+		}
+
+		if (this.isLogicalSideForUpdatingMovement()) {
+			this.bodyTrackingIncrements = 0;
+			this.updateTrackedPosition(this.getX(), this.getY(), this.getZ());
+		}
+
+		if (this.bodyTrackingIncrements > 0) {
+			double newX = this.getX() + (this.serverX - this.getX()) / (double)this.bodyTrackingIncrements;
+			double newY = this.getY() + (this.serverY - this.getY()) / (double)this.bodyTrackingIncrements;
+			double newZ = this.getZ() + (this.serverZ - this.getZ()) / (double)this.bodyTrackingIncrements;
+			double newYaw = MathHelper.wrapDegrees(this.serverYaw - (double)this.yaw);
+			this.yaw = (float)((double)this.yaw + newYaw / (double)this.bodyTrackingIncrements);
+			this.pitch = (float)((double)this.pitch + (this.serverPitch - (double)this.pitch) / (double)this.bodyTrackingIncrements);
+			--this.bodyTrackingIncrements;
+			this.updatePosition(newX, newY, newZ);
+			this.setRotation(this.yaw, this.pitch);
+		} else if (!this.canMoveVoluntarily()) {
+			this.setVelocity(this.getVelocity().multiply(0.98D));
+		}
+
+		if (this.headTrackingIncrements > 0) {
+			this.headYaw = (float)((double)this.headYaw + MathHelper.wrapDegrees(this.serverHeadYaw - (double)this.headYaw) / (double)this.headTrackingIncrements);
+			--this.headTrackingIncrements;
+		}
+
+		Vec3d currentVelocity = this.getVelocity();
+		double velocityX = currentVelocity.x;
+		double velocityY = currentVelocity.y;
+		double velocityZ = currentVelocity.z;
+		if (Math.abs(currentVelocity.x) < 0.003D) {
+			velocityX = 0.0D;
+		}
+
+		if (Math.abs(currentVelocity.y) < 0.003D) {
+			velocityY = 0.0D;
+		}
+
+		if (Math.abs(currentVelocity.z) < 0.003D) {
+			velocityZ = 0.0D;
+		}
+
+		this.setVelocity(velocityX, velocityY, velocityZ);
+		this.world.getProfiler().push("ai");
+
+		if (this.isImmobile()) {
+			this.jumping = false;
+			this.sidewaysSpeed = 0.0F;
+			this.forwardSpeed = 0.0F;
+		} else if (this.canMoveVoluntarily()) {
+			this.world.getProfiler().push("newAi");
+			this.tickNewAi();
+			this.world.getProfiler().pop();
+		}
+
+		this.world.getProfiler().pop();
+		this.world.getProfiler().push("jump");
+		if (this.jumping) {
+			if (this.waterHeight <= 0.0D || this.onGround && this.waterHeight <= 0.4D) {
+				if (this.isInLava()) {
+					this.swimUpward(FluidTags.LAVA);
+				} else if ((this.onGround || this.waterHeight > 0.0D && this.waterHeight <= 0.4D) && this.jumpingCooldown == 0) {
+					this.jump();
+					this.jumpingCooldown = 10;
+				}
+			} else {
+				this.swimUpward(FluidTags.WATER);
 			}
+		} else {
+			this.jumpingCooldown = 0;
 		}
 
-		super.fall(heightDifference, onGround, landedState, landedPosition);
-	} */
+		this.world.getProfiler().pop();
+		this.world.getProfiler().push("travel");
+		this.sidewaysSpeed *= 0.98F;
+		this.forwardSpeed *= 0.98F;
+		this.initAi();
+		Box box = this.getBoundingBox();
+		this.travel(new Vec3d((double)this.sidewaysSpeed, (double)this.upwardSpeed, (double)this.forwardSpeed));
+		this.world.getProfiler().pop();
+		this.world.getProfiler().push("push");
+		if (this.pushCooldown > 0) {
+			--this.pushCooldown;
+			this.push(box, this.getBoundingBox());
+		}
 
+		this.tickCramming();
+		this.world.getProfiler().pop();
+	}
+
+	@Shadow
+	private void tickNewAi() {
+		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
+	}
+	@Shadow
+	private boolean isImmobile() {
+		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
+	}
+	@Shadow
+	private void initAi() {
+		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
+	}
+	@Shadow
+	private void push(Box a, Box b) {
+		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
+	}
+	@Shadow
+	private void swimUpward(Tag<Fluid> fluidTag) {
+		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
+	}
+	@Shadow
+	private void tickCramming() {
+		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
+	}
+	@Shadow
+	private float getJumpVelocity() {
+		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
+	}
 	@Shadow
 	private float getBaseMovementSpeedMultiplier() {
 		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");

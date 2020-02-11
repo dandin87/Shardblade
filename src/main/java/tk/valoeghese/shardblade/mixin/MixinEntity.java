@@ -21,6 +21,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import tk.valoeghese.shardblade.mechanics.surgebinding.windrunning.WindrunningSurgeImpl;
 
 @Mixin(Entity.class)
 public abstract class MixinEntity {
@@ -62,32 +63,34 @@ public abstract class MixinEntity {
 			}
 
 			movement = this.adjustMovementForSneaking(movement, type);
-			Vec3d vec3d = this.adjustMovementForCollisions(movement);
-			if (vec3d.lengthSquared() > 1.0E-7D) {
-				this.setBoundingBox(this.getBoundingBox().offset(vec3d));
+			Vec3d movementAdjustedForCollisions = this.adjustMovementForCollisions(movement);
+			if (movementAdjustedForCollisions.lengthSquared() > 1.0E-7D) {
+				this.setBoundingBox(this.getBoundingBox().offset(movementAdjustedForCollisions));
 				this.moveToBoundingBoxCenter();
 			}
 
 			this.world.getProfiler().pop();
 			this.world.getProfiler().push("rest");
-			this.horizontalCollision = !MathHelper.approximatelyEquals(movement.x, vec3d.x) || !MathHelper.approximatelyEquals(movement.z, vec3d.z);
-			this.verticalCollision = movement.y != vec3d.y;
-			this.onGround = this.verticalCollision && movement.y < 0.0D;
+			boolean xCollision = !MathHelper.approximatelyEquals(movement.x, movementAdjustedForCollisions.x);
+			boolean zCollision = !MathHelper.approximatelyEquals(movement.z, movementAdjustedForCollisions.z);
+			this.horizontalCollision = xCollision || zCollision;
+			this.verticalCollision = movement.y != movementAdjustedForCollisions.y;
+			this.onGround = WindrunningSurgeImpl.onGround(movementAdjustedForCollisions, movement);
 			this.collided = this.horizontalCollision || this.verticalCollision;
 			BlockPos blockPos = this.getLandingPos();
 			BlockState blockState = this.world.getBlockState(blockPos);
-			this.fall(vec3d.y, this.onGround, blockState, blockPos);
+			this.fall(movementAdjustedForCollisions.y, this.onGround, blockState, blockPos);
 			Vec3d vec3d2 = this.getVelocity();
-			if (movement.x != vec3d.x) {
+			if (movement.x != movementAdjustedForCollisions.x) {
 				this.setVelocity(0.0D, vec3d2.y, vec3d2.z);
 			}
 
-			if (movement.z != vec3d.z) {
+			if (movement.z != movementAdjustedForCollisions.z) {
 				this.setVelocity(vec3d2.x, vec3d2.y, 0.0D);
 			}
 
 			Block block = blockState.getBlock();
-			if (movement.y != vec3d.y) {
+			if (movement.y != movementAdjustedForCollisions.y) {
 				block.onEntityLand(this.world, self);
 			}
 
@@ -96,14 +99,14 @@ public abstract class MixinEntity {
 			}
 
 			if (this.canClimb() && !this.hasVehicle()) {
-				double d = vec3d.x;
-				double e = vec3d.y;
-				double f = vec3d.z;
+				double d = movementAdjustedForCollisions.x;
+				double e = movementAdjustedForCollisions.y;
+				double f = movementAdjustedForCollisions.z;
 				if (block != Blocks.LADDER && block != Blocks.SCAFFOLDING) {
 					e = 0.0D;
 				}
 
-				this.horizontalSpeed = (float)((double)this.horizontalSpeed + (double)MathHelper.sqrt(squaredHorizontalLength(vec3d)) * 0.6D);
+				this.horizontalSpeed = (float)((double)this.horizontalSpeed + (double)MathHelper.sqrt(squaredHorizontalLength(movementAdjustedForCollisions)) * 0.6D);
 				this.distanceTraveled = (float)((double)this.distanceTraveled + (double)MathHelper.sqrt(d * d + e * e + f * f) * 0.6D);
 				if (this.distanceTraveled > this.nextStepSoundDistance && !blockState.isAir()) {
 					this.nextStepSoundDistance = this.calculateNextStepSoundDistance();
