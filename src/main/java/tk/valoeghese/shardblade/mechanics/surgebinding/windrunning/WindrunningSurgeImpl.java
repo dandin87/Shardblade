@@ -7,25 +7,13 @@ import net.minecraft.util.math.Vec3d;
 
 public class WindrunningSurgeImpl {
 	public static void changeGravity(PlayerEntity user, Vec3d lookVector) {
-		float x = (float) fixApproximations(lookVector.x);
-		float y = (float) fixApproximations(lookVector.y);
-		float z = (float) fixApproximations(lookVector.z);
+		float x = (float) lookVector.x;
+		float y = (float) lookVector.y;
+		float z = (float) lookVector.z;
 		x = (float) (lookVector.x * GRAVITATIONAL_CONSTANT);
 		y = (float) (lookVector.y * GRAVITATIONAL_CONSTANT);
 		z = (float) (lookVector.z * GRAVITATIONAL_CONSTANT);
 		((IWindrunnerGravity) (Object) user).setGravitation(x, y, z);
-	}
-
-	private static double fixApproximations(double in) {
-		if (Math.abs(in) < 0.15) {
-			return 0;
-		} else if (Math.abs(in - 1) < 0.15) {
-			return 1;
-		} else if (Math.abs(in + 1) < 0.15) {
-			return -1;
-		}
-
-		return in;
 	}
 
 	public static void jump(Vec3d currentVelocity, Vec3d jumpVector, LivingEntity entity) {
