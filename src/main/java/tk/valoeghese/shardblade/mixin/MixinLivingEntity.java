@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
@@ -19,16 +20,22 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.tag.FluidTags;
 import net.minecraft.tag.Tag;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import tk.valoeghese.shardblade.item.HonorBlade;
+import tk.valoeghese.shardblade.item.IShardblade;
 import tk.valoeghese.shardblade.mechanics.IShardbladeAffectedEntity;
+import tk.valoeghese.shardblade.mechanics.surgebinding.ISurgebinder;
+import tk.valoeghese.shardblade.mechanics.surgebinding.Surge;
+import tk.valoeghese.shardblade.mechanics.surgebinding.SurgebindingOrder;
 import tk.valoeghese.shardblade.mechanics.surgebinding.windrunning.IWindrunnerGravity;
 import tk.valoeghese.shardblade.mechanics.surgebinding.windrunning.WindrunningSurgeImpl;
 
@@ -99,6 +106,39 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 		shardbladeData.putFloat("GravityYaw", this.wrCurrentYaw);
 
 		tag.put("Shardblade", shardbladeData);
+	}
+
+	@Inject(at = @At("HEAD"), method = "handleFallDamagw")
+	private void reduceSurgebinderFallDamage(float fallDistance, float damageMultiplier, CallbackInfoReturnable<Boolean> cir) {
+		LivingEntity self = (LivingEntity) (Object) this;
+
+		if (self instanceof PlayerEntity) {
+			ItemStack stack = self.getStackInHand(Hand.MAIN_HAND);
+
+			if (stack.getItem() instanceof HonorBlade) {
+				float newDamageMultiplier = damageMultiplier / 3.5f;
+				SurgebindingOrder order = ((ISurgebinder) (Object) stack).getOrder();
+
+				if (!SurgebindingOrder.isNone(order)) {
+					if (order.hasSurge(Surge.GRAVITATION)) {
+						// TODO stormlight check, when stormlight is added
+						newDamageMultiplier = damageMultiplier / 12.5f;
+					}
+				}
+
+				boolean superResult = super.handleFallDamage(fallDistance, newDamageMultiplier);
+				int i = this.computeFallDamage(fallDistance, newDamageMultiplier);
+
+				if (i > 0) {
+					this.playSound(this.getFallSound(i), 1.0F, 1.0F);
+					this.playBlockFallSound();
+					this.damage(DamageSource.FALL, (float)i);
+					cir.setReturnValue(true);
+				} else {
+					cir.setReturnValue(superResult);
+				}
+			}
+		}
 	}
 
 	@Override
@@ -298,6 +338,8 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 		this.velocityDirty = true;
 	}
 
+	/* Might need to mess with this when altering camera and model for rotations
+	@Overwrite
 	public void tickMovement() {
 		if (this.jumpingCooldown > 0) {
 			--this.jumpingCooldown;
@@ -389,76 +431,27 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 
 		this.tickCramming();
 		this.world.getProfiler().pop();
-	}
+	} */
 
-	@Shadow
-	private void tickNewAi() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
-	@Shadow
-	private boolean isImmobile() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
-	@Shadow
-	private void initAi() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
-	@Shadow
-	private void push(Box a, Box b) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
-	@Shadow
-	private void swimUpward(Tag<Fluid> fluidTag) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
-	@Shadow
-	private void tickCramming() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
-	@Shadow
-	private float getJumpVelocity() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
-	@Shadow
-	private float getBaseMovementSpeedMultiplier() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
- 	}
-	@Shadow
-	private float getMovementSpeed() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
-	@Shadow
-	private StatusEffectInstance getStatusEffect(StatusEffect levitation) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
-	@Shadow
-	private boolean isClimbing() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
-	@Shadow
-	private SoundEvent getFallSound(int u) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
-	@Shadow
-	private boolean isFallFlying() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
-	@Shadow
-	private boolean hasStatusEffect(StatusEffect status) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
-	@Shadow
-	private Vec3d applyClimbingSpeed(Vec3d velocity) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
-	@Shadow
-	private float getMovementSpeed(float slipperiness) {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
-	@Shadow
-	private boolean canMoveVoluntarily() {
-		throw new RuntimeException("[Shardblade] Failed @Shadow in MixinLivingEntity");
-	}
+	@Shadow abstract protected void playBlockFallSound();
+	@Shadow abstract protected void tickNewAi();
+	@Shadow abstract protected boolean isImmobile();
+	@Shadow abstract protected void initAi();
+	@Shadow abstract protected void push(Box a, Box b);
+	@Shadow abstract protected void swimUpward(Tag<Fluid> fluidTag);
+	@Shadow abstract protected void tickCramming();
+	@Shadow abstract protected float getJumpVelocity();
+	@Shadow abstract protected float getBaseMovementSpeedMultiplier();
+	@Shadow abstract protected float getMovementSpeed();
+	@Shadow abstract protected StatusEffectInstance getStatusEffect(StatusEffect levitation);
+	@Shadow abstract protected boolean isClimbing();
+	@Shadow abstract protected SoundEvent getFallSound(int u);
+	@Shadow abstract protected boolean isFallFlying();
+	@Shadow abstract protected boolean hasStatusEffect(StatusEffect status);
+	@Shadow abstract protected Vec3d applyClimbingSpeed(Vec3d velocity);
+	@Shadow abstract protected float getMovementSpeed(float slipperiness);
+	@Shadow abstract protected boolean canMoveVoluntarily();
+	@Shadow abstract protected int computeFallDamage(float fallDistance, float damageMultiplier);
 
 	@Override
 	public void setGravitation(float x, float y, float z, float gravityCache, float yawCache, float pitchCache) {

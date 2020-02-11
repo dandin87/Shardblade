@@ -45,22 +45,22 @@ public class WindrunningSurgeImpl {
 		// will probably change when model and camera rotation are added
 		if (pitch < -45) {
 			// up
-			return new Vec3d(raw.x, 0, raw.z);
+			return new Vec3d(raw.x, raw.y, raw.z);
 		} else if (pitch > 45) {
 			// down
 			return raw;
 		} else if (yaw > 135 || yaw < -135) {
 			// north, -z
-			return new Vec3d(raw.x, raw.z, 0);
+			return new Vec3d(raw.x, raw.z, raw.y);
 		} else if (yaw > 45) {
 			// west, -x
-			return new Vec3d(raw.x, raw.z, 0);
+			return new Vec3d(raw.x, raw.z, raw.y);
 		} else if (yaw < -45) {
 			// east, x
-			return new Vec3d(0, raw.x, raw.z);
+			return new Vec3d(raw.y, raw.x, raw.z);
 		} else {
 			// south, z
-			return new Vec3d(0, raw.x, raw.z);
+			return new Vec3d(raw.y, raw.x, raw.z);
 		}
 	}
 
