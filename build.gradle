@@ -23,6 +23,10 @@ repositories {
         name = "Onyx Studios"
         url = "https://maven.onyxstudios.dev"
     }
+	maven {
+	    name = "JitPack"
+		url = "https://jitpack.io"
+	}
 }
 
 dependencies {
@@ -32,8 +36,8 @@ dependencies {
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modCompile "net.fabricmc:fabric-loader:${project.loader_version}"
 	modCompile "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-	//modImplementation "com.github.NerdHubMC:Cardinal-Components-API:{project.cardinal_version}"
-	//include "com.github.NerdHubMC:Cardinal-Components-API:{project.cardinal_version}"
+	modImplementation "com.github.OnyxStudios:Cardinal-Components-API:${project.cardinal_version}"
+	include "com.github.OnyxStudios:Cardinal-Components-API:${project.cardinal_version}"
 }
 
 processResources {
