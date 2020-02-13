@@ -11,10 +11,10 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
+import tk.valoeghese.shardblade.mechanics.gravity.Gravitation3;
 import tk.valoeghese.shardblade.mechanics.surgebinding.ISurgebinder;
 import tk.valoeghese.shardblade.mechanics.surgebinding.Surge;
 import tk.valoeghese.shardblade.mechanics.surgebinding.SurgebindingOrder;
-import tk.valoeghese.shardblade.mechanics.surgebinding.windrunning.WindrunningSurgeImpl;
 import tk.valoeghese.shardblade.registry.RegistryInfo;
 
 @RegistryInfo("honorblade")
@@ -43,7 +43,7 @@ public class HonorBlade extends ShardbladeBase {
 				// * 0.017453292F if doing builtin mc maths since mc uses radians
 				float yaw = ((user.yaw + 180f) % 360f) - 180f;
 				float pitch = ((user.pitch + 180f) % 360f) - 180f; // messing with pitch may be neccesary later, not exactly sure
-				WindrunningSurgeImpl.changeGravity(user, user.getRotationVector(), yaw, pitch);
+				Gravitation3.changeGravity(user, user.getRotationVector(), yaw, pitch);
 			}
 		}
 

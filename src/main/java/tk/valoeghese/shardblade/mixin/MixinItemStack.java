@@ -12,11 +12,11 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import tk.valoeghese.shardblade.item.HonorBlade;
-import tk.valoeghese.shardblade.mechanics.IItemstackSurgebinder;
+import tk.valoeghese.shardblade.mechanics.ISurgebindingItem;
 import tk.valoeghese.shardblade.mechanics.surgebinding.SurgebindingOrder;
 
 @Mixin(ItemStack.class)
-public class MixinItemStack implements IItemstackSurgebinder {
+public class MixinItemStack implements ISurgebindingItem {
 	@Shadow
 	@Final
 	private Item item;
@@ -38,7 +38,7 @@ public class MixinItemStack implements IItemstackSurgebinder {
 			if (item instanceof HonorBlade) {
 				if (tag.contains("tag", 10)) {
 					CompoundTag itemTag = tag.getCompound("tag");
-					((IItemstackSurgebinder) (Object) result).setOrder(SurgebindingOrder.byId(itemTag.getByte("order")));
+					((ISurgebindingItem) (Object) result).setOrder(SurgebindingOrder.byId(itemTag.getByte("order")));
 				}
 			}
 		}

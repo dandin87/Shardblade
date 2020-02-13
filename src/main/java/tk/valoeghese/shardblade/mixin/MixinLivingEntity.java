@@ -32,14 +32,14 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import tk.valoeghese.shardblade.item.HonorBlade;
 import tk.valoeghese.shardblade.mechanics.IShardbladeAffectedEntity;
+import tk.valoeghese.shardblade.mechanics.gravity.Gravitation3;
+import tk.valoeghese.shardblade.mechanics.gravity.I3DGravitation;
 import tk.valoeghese.shardblade.mechanics.surgebinding.ISurgebinder;
 import tk.valoeghese.shardblade.mechanics.surgebinding.Surge;
 import tk.valoeghese.shardblade.mechanics.surgebinding.SurgebindingOrder;
-import tk.valoeghese.shardblade.mechanics.surgebinding.windrunning.IWindrunnerGravity;
-import tk.valoeghese.shardblade.mechanics.surgebinding.windrunning.WindrunningSurgeImpl;
 
 @Mixin(LivingEntity.class)
-public abstract class MixinLivingEntity extends Entity implements IShardbladeAffectedEntity, IWindrunnerGravity {
+public abstract class MixinLivingEntity extends Entity implements IShardbladeAffectedEntity, I3DGravitation {
 	public MixinLivingEntity(EntityType<?> type, World world) {
 		super(type, world);
 	}
@@ -152,7 +152,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 
 	@Overwrite
 	public void travel(Vec3d rawMovementInput) {
-		Vec3d movementInput = WindrunningSurgeImpl.rotate(rawMovementInput, this.wrCurrentPitch, this.wrCurrentYaw, this.wrCurrentGravity);
+		Vec3d movementInput = Gravitation3.rotateAligned(rawMovementInput, this.wrCurrentPitch, this.wrCurrentYaw, this.wrCurrentGravity);
 		LivingEntity self = (LivingEntity) (Object) this;
 		double vanillaGravity;
 		double gravityMultiplier = 1D;
@@ -332,7 +332,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 
 		Vec3d currentVelocity = this.getVelocity();
 		Vec3d jumpVector = new Vec3d(this.wrGravityX * jumpVelocity, this.wrGravityY * jumpVelocity, this.wrGravityZ * jumpVelocity);
-		WindrunningSurgeImpl.jump(currentVelocity, jumpVector, (LivingEntity) (Object) this);
+		Gravitation3.jump(currentVelocity, jumpVector, (LivingEntity) (Object) this);
 
 		this.velocityDirty = true;
 	}
@@ -465,6 +465,21 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 	@Override
 	public float[] getGravitation() {
 		return new float[] {this.wrGravityX, this.wrGravityY, this.wrGravityZ};
+	}
+
+	@Override
+	public float getCachedYaw() {
+		return this.wrCurrentYaw;
+	}
+
+	@Override
+	public float getCachedPitch() {
+		return this.wrCurrentPitch;
+	}
+
+	@Override
+	public float getCachedGravitationalStrength() {
+		return this.wrCurrentGravity;
 	}
 
 	private static final int SHARDBLADE_SCHEMA_LATEST = 0;
