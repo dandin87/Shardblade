@@ -32,7 +32,11 @@ public class Gravitation3 {
 		return !(Math.abs(strength(movement.subtract(collision))) < 9.999999747378752E-6D);
 	}
 
-	private static double strength(Vec3d vec) {
+	public static double fallSpeed(Vec3d movement, Vec3d gravitation) {
+		return strength(gravitation.normalize().multiply(movement));
+	}
+
+	public static double strength(Vec3d vec) {
 		return Math.sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
 	}
 

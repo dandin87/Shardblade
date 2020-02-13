@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -52,6 +53,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 	private float wrCurrentGravity = 0.08f;
 	private float wrCurrentYaw = 0;
 	private float wrCurrentPitch = 90;
+	private Vec3d wrGravityVec = new Vec3d(0, -0.08, 0);
 
 	@Shadow private float lastLimbDistance;
 	@Shadow private float limbDistance;
@@ -105,6 +107,11 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 		shardbladeData.putFloat("GravityYaw", this.wrCurrentYaw);
 
 		tag.put("Shardblade", shardbladeData);
+	}
+
+	@Override
+	public void handle3DFall(Vec3d motion, boolean onGround, BlockState blockState, BlockPos blockPos) {
+		this.fall(Gravitation3.fallSpeed(motion, this.wrGravityVec), onGround, blockState, blockPos);
 	}
 
 	@Inject(at = @At("HEAD"), method = "handleFallDamage", cancellable = true)
@@ -460,6 +467,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 		this.wrCurrentGravity = gravityCache;
 		this.wrCurrentYaw = yawCache;
 		this.wrCurrentPitch = pitchCache;
+		this.wrGravityVec = new Vec3d(x, y, z);
 	}
 
 	@Override
