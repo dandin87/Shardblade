@@ -21,7 +21,7 @@ public class Gravitation3 {
 		entity.setVelocity(currentVelocity.x + jumpVector.x, currentVelocity.y + jumpVector.y, currentVelocity.z + jumpVector.z);
 		entity.setVelocity(currentVelocity.x + jumpVector.x, currentVelocity.y + jumpVector.y, currentVelocity.z + jumpVector.z);
 
-		// todo use 3d
+		// todo use 3
 		if (entity.isSprinting()) {
 			float yawRadians = entity.yaw * 0.017453292F;
 			entity.setVelocity(entity.getVelocity().add((double)(-MathHelper.sin(yawRadians) * 0.2F), 0.0D, (double)(MathHelper.cos(yawRadians) * 0.2F)));
@@ -32,10 +32,22 @@ public class Gravitation3 {
 		return !(Math.abs(strength(movement.subtract(collision))) < 9.999999747378752E-6D);
 	}
 
-	public static double fallSpeed(Vec3d movement, Vec3d gravitation) {
-		return strength(gravitation.normalize().multiply(movement));
+	public static double fallDamageSpeed(Vec3d rawMotion, Vec3d gravity, boolean xCol, boolean yCol, boolean zCol/*, Vec3d gravitation*/) {
+		//return strength(gravitation.normalize().multiply(movement));
+		Vec3d movement = rawMotion;//perhapsInvertFor3dGravity(rawMotion, gravity);
+		return movement.subtract(xCol ? movement.x : 0, yCol ? movement.y : 0, zCol ? movement.z : 0).length();
 	}
 
+	/**
+	 * @deprecated doesn't work properly lol but keeping this in case I need it and because its cursed
+	 */
+	@SuppressWarnings("unused")
+	@Deprecated
+	private static Vec3d perhapsInvertFor3dGravity(Vec3d motion, Vec3d gravity) {
+		return new Vec3d(gravity.x < 0 ? -motion.x : motion.x, gravity.y < 0 ? -motion.y : motion.y, gravity.z < 0 ? -motion.z : motion.z);
+	}
+
+	// I just realised this is redundant because there's vec.length() ~ valo, 4:38pm 14/02/20 NZST
 	public static double strength(Vec3d vec) {
 		return Math.sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
 	}
@@ -112,12 +124,12 @@ public class Gravitation3 {
 		} else if (pitch < CLAMP_RADIUS && pitch > -CLAMP_RADIUS) {
 			if (yaw > 180 - CLAMP_RADIUS || yaw < CLAMP_RADIUS - 180) {
 				return NORTH;
-			} else if (yaw > 90 - CLAMP_RADIUS) {
-				return WEST;
-			} else if (yaw < CLAMP_RADIUS - 90) {
-				return EAST;
 			} else if (yaw < CLAMP_RADIUS && yaw > -CLAMP_RADIUS) {
 				return SOUTH;
+			} else if (yaw > 80 - CLAMP_RADIUS && yaw < 100 - CLAMP_RADIUS) {
+				return WEST;
+			} else if (yaw < CLAMP_RADIUS - 80 && yaw > CLAMP_RADIUS - 100) {
+				return EAST;
 			}
 		}
 

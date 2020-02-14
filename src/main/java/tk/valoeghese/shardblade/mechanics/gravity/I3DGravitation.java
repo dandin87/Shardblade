@@ -10,5 +10,6 @@ public interface I3DGravitation {
 	float getCachedYaw();
 	float getCachedPitch();
 	float getCachedGravitationalStrength();
-	void handle3DFall(Vec3d motion, boolean onGround, BlockState blockState, BlockPos blockPos);
+	void handle3DFallDamage(Vec3d motion, boolean xCol, boolean yCol, boolean zCol, BlockState blockState, BlockPos blockPos);
+	double calculateFallDamageDistance(double fallDamageSpeed);
 }

@@ -6,6 +6,9 @@ import java.util.Random;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -13,6 +16,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityContext;
 import net.minecraft.entity.MovementType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ReusableStream;
@@ -28,8 +32,10 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.World;
 import tk.valoeghese.shardblade.mechanics.gravity.Gravitation3;
 import tk.valoeghese.shardblade.mechanics.gravity.I3DGravitation;
+import tk.valoeghese.shardblade.util.MutableVec3d;
+import tk.valoeghese.shardblade.util.ShardbladeMathUtil;
 
-@Mixin(Entity.class)
+@Mixin(value = Entity.class, priority = 500)
 public abstract class MixinEntity {
 	@Shadow private boolean noClip;
 	@Shadow private World world;
@@ -46,6 +52,33 @@ public abstract class MixinEntity {
 	@Shadow private float horizontalSpeed;
 	@Shadow private float nextStepSoundDistance;
 	@Shadow private float stepHeight;
+	@Shadow private float fallDistance;
+
+	// lower priority head @Inject mixin instead of @Overwrite in case mods want to i.e. use some parameter values
+	@Inject(at = @At("HEAD"), method = "fall", cancellable = true)
+	private void fall3D(double heightDifference, boolean onGround, BlockState landedState, BlockPos landedPosition, CallbackInfo info) {
+		// ohno I stuffed up fall damage instead
+		if (this instanceof I3DGravitation) {
+			if (onGround) {
+				// Vanilla: if (this.fallDistance > 0.0F)
+				double fallDistance = ((I3DGravitation) this).calculateFallDamageDistance(heightDifference);
+				if (fallDistance != 0.0F) {
+					if (this.fallDistance != 0.0F) {
+						System.out.print(fallDistance);
+						System.out.print(" ");
+						System.out.println(this.fallDistance);
+					}
+					landedState.getBlock().onLandedUpon(this.world, landedPosition, (Entity) (Object) this, (float) fallDistance);
+				}
+
+				this.fallDistance = 0.0F;
+			} else if (heightDifference < 0.0D) {
+				this.fallDistance = (float) (this.fallDistance - heightDifference);
+			}
+
+			info.cancel();
+		}
+	}
 
 	@Overwrite
 	public void move(MovementType type, Vec3d movement) {
@@ -87,7 +120,7 @@ public abstract class MixinEntity {
 			BlockPos blockPos = this.getLandingPos();
 			BlockState blockState = this.world.getBlockState(blockPos);
 			if (this instanceof I3DGravitation) {
-				((I3DGravitation) this).handle3DFall(adjustedMovement, this.onGround, blockState, blockPos);
+				((I3DGravitation) this).handle3DFallDamage(adjustedMovement, xCollision, verticalCollision, zCollision, blockState, blockPos);
 			} else {
 				this.fall(adjustedMovement.y, this.onGround, blockState, blockPos);
 			}
@@ -196,7 +229,7 @@ public abstract class MixinEntity {
 		}
 
 		return adjustedMovement;
-	
+
 	} // */
 
 	private static Vec3d stepHeightVector(Entity self, double stepHeight, Optional<Vec3d> movement) {
@@ -219,7 +252,7 @@ public abstract class MixinEntity {
 				result = result.rotateY(-yRot).rotateX(-xRot);
 				// swap z and y back, return
 				return new Vec3d(result.x, result.z, result.y);
-				*/
+				 */
 				Direction rotation = Gravitation3.getRotation(yaw, pitch);
 				result = Gravitation3.rotateAligned(result, rotation, gravity);
 				result = new Vec3d(result.x, stepHeight, result.z);

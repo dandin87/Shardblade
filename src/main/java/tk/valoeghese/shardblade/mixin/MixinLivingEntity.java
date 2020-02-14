@@ -28,6 +28,7 @@ import net.minecraft.tag.Tag;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -110,8 +111,18 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 	}
 
 	@Override
-	public void handle3DFall(Vec3d motion, boolean onGround, BlockState blockState, BlockPos blockPos) {
-		this.fall(Gravitation3.fallSpeed(motion, this.wrGravityVec), onGround, blockState, blockPos);
+	public void handle3DFallDamage(Vec3d motion, boolean xCol, boolean yCol, boolean zCol, BlockState blockState, BlockPos blockPos) {
+		// someone pls fix my 3d falldamage code
+		double fallDamageSpeed = Gravitation3.fallDamageSpeed(motion, this.wrGravityVec, xCol, yCol, zCol);
+		this.fall(fallDamageSpeed, this.collided, blockState, blockPos);
+	}
+	
+//	private static final double FDDCoefficient = 9.81 / (2 * 0.08); // fall damage distance coefficient (inverse, since it goes in denominator)
+
+	@Override
+	public double calculateFallDamageDistance(double fallDamageSpeed) {
+		//return (fallDamageSpeed * fallDamageSpeed) / (FDDCoefficient * this.wrCurrentGravity);
+		return fallDamageSpeed * fallDamageSpeed; // assume everything is to do with gravity because yeet
 	}
 
 	@Inject(at = @At("HEAD"), method = "handleFallDamage", cancellable = true)
@@ -163,7 +174,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 		LivingEntity self = (LivingEntity) (Object) this;
 		double vanillaGravity;
 		double gravityMultiplier = 1D;
-		float g;
+		float yaYeet;
 
 		if (this.canMoveVoluntarily() || this.isLogicalSideForUpdatingMovement()) {
 			vanillaGravity = 0.08D;
@@ -193,37 +204,37 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 					if (this.horizontalCollision && this.doesNotCollide(vec3d4.x, vec3d4.y + 0.6000000238418579D - this.getY() + e, vec3d4.z)) {
 						this.setVelocity(vec3d4.x, 0.30000001192092896D, vec3d4.z);
 					}
-				} else if (this.isFallFlying()) {
-					Vec3d vec3d5 = this.getVelocity();
+				} else if (this.isFallFlying()) { // Elytra
+					Vec3d entityVelocity = this.getVelocity();
 
-					if (vec3d5.y > -0.5D) {
+					if (entityVelocity.y > -0.5D) {
 						this.fallDistance = 1.0F;
 					}
 
-					Vec3d vec3d6 = this.getRotationVector();
+					Vec3d entityRotation = this.getRotationVector();
 					horizontalMovementMultiplier = this.pitch * 0.017453292F;
-					double m = Math.sqrt(vec3d6.x * vec3d6.x + vec3d6.z * vec3d6.z);
-					double n = Math.sqrt(squaredHorizontalLength(vec3d5));
-					swimUpVelocity = vec3d6.length();
+					double horizontalRotationLength = Math.sqrt(entityRotation.x * entityRotation.x + entityRotation.z * entityRotation.z);
+					double n = Math.sqrt(squaredHorizontalLength(entityVelocity));
+					swimUpVelocity = entityRotation.length();
 					float p = MathHelper.cos(horizontalMovementMultiplier);
 					p = (float)((double)p * (double)p * Math.min(1.0D, swimUpVelocity / 0.4D));
-					vec3d5 = this.getVelocity().add(0.0D, vanillaGravity * (-1.0D + (double)p * 0.75D), 0.0D);
+					entityVelocity = this.getVelocity().add(0.0D, vanillaGravity * (-1.0D + (double)p * 0.75D), 0.0D);
 					double s;
-					if (vec3d5.y < 0.0D && m > 0.0D) {
-						s = vec3d5.y * -0.1D * (double)p;
-						vec3d5 = vec3d5.add(vec3d6.x * s / m, s, vec3d6.z * s / m);
+					if (entityVelocity.y < 0.0D && horizontalRotationLength > 0.0D) {
+						s = entityVelocity.y * -0.1D * (double)p;
+						entityVelocity = entityVelocity.add(entityRotation.x * s / horizontalRotationLength, s, entityRotation.z * s / horizontalRotationLength);
 					}
 
-					if (horizontalMovementMultiplier < 0.0F && m > 0.0D) {
+					if (horizontalMovementMultiplier < 0.0F && horizontalRotationLength > 0.0D) {
 						s = n * (double)(-MathHelper.sin(horizontalMovementMultiplier)) * 0.04D;
-						vec3d5 = vec3d5.add(-vec3d6.x * s / m, s * 3.2D, -vec3d6.z * s / m);
+						entityVelocity = entityVelocity.add(-entityRotation.x * s / horizontalRotationLength, s * 3.2D, -entityRotation.z * s / horizontalRotationLength);
 					}
 
-					if (m > 0.0D) {
-						vec3d5 = vec3d5.add((vec3d6.x / m * n - vec3d5.x) * 0.1D, 0.0D, (vec3d6.z / m * n - vec3d5.z) * 0.1D);
+					if (horizontalRotationLength > 0.0D) {
+						entityVelocity = entityVelocity.add((entityRotation.x / horizontalRotationLength * n - entityVelocity.x) * 0.1D, 0.0D, (entityRotation.z / horizontalRotationLength * n - entityVelocity.z) * 0.1D);
 					}
 
-					this.setVelocity(vec3d5.multiply(0.9900000095367432D, 0.9800000190734863D, 0.9900000095367432D));
+					this.setVelocity(entityVelocity.multiply(0.9900000095367432D, 0.9800000190734863D, 0.9900000095367432D));
 					this.move(MovementType.SELF, this.getVelocity());
 					if (this.horizontalCollision && !this.world.isClient) {
 						s = Math.sqrt(squaredHorizontalLength(this.getVelocity()));
@@ -269,7 +280,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 			} else {
 				e = this.getY();
 				horizontalMovementMultiplier = this.isSprinting() ? 0.9F : this.getBaseMovementSpeedMultiplier();
-				g = 0.02F;
+				yaYeet = 0.02F;
 				float h = (float) EnchantmentHelper.getDepthStrider(self);
 				if (h > 3.0F) {
 					h = 3.0F;
@@ -281,14 +292,14 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 
 				if (h > 0.0F) {
 					horizontalMovementMultiplier += (0.54600006F - horizontalMovementMultiplier) * h / 3.0F;
-					g += (this.getMovementSpeed() - g) * h / 3.0F;
+					yaYeet += (this.getMovementSpeed() - yaYeet) * h / 3.0F;
 				}
 
 				if (this.hasStatusEffect(StatusEffects.DOLPHINS_GRACE)) {
 					horizontalMovementMultiplier = 0.96F;
 				}
 
-				this.updateVelocity(g, movementInput);
+				this.updateVelocity(yaYeet, movementInput);
 				this.move(MovementType.SELF, this.getVelocity());
 				Vec3d vec3d = this.getVelocity();
 				if (this.horizontalCollision && this.isClimbing()) {
@@ -296,35 +307,42 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 				}
 
 				this.setVelocity(vec3d.multiply((double)horizontalMovementMultiplier, 0.800000011920929D, (double)horizontalMovementMultiplier));
-				Vec3d vec3d2;
+				Vec3d velocity;
 				if (!this.hasNoGravity() && !this.isSprinting()) {
-					vec3d2 = this.getVelocity(); // also this
-					if (bl && Math.abs(vec3d2.y - 0.005D) >= 0.003D && Math.abs(vec3d2.y - vanillaGravity / 16.0D) < 0.003D) {
+					velocity = this.getVelocity(); // also this
+					if (bl && Math.abs(velocity.y - 0.005D) >= 0.003D && Math.abs(velocity.y - vanillaGravity / 16.0D) < 0.003D) {
 						swimUpVelocity = -0.003D;
 					} else {
-						swimUpVelocity = vec3d2.y - vanillaGravity / 16.0D;
+						swimUpVelocity = velocity.y - (this.wrCurrentGravity * gravityMultiplier) / 16.0D; // vanilla uses velocity.y - vanillaGravity * 16
 					}
 
-					this.setVelocity(vec3d2.x, swimUpVelocity, vec3d2.z);
+					Direction rotationSwimGrav = Gravitation3.getRotation(this.wrCurrentYaw, this.wrCurrentPitch);
+					velocity = Gravitation3.rotateAligned(velocity, rotationSwimGrav, this.wrCurrentGravity);
+					this.setVelocity(Gravitation3.revertAlignedRotation(new Vec3d(velocity.x, swimUpVelocity, velocity.z), rotationSwimGrav, this.wrCurrentGravity));
 				}
 
-				vec3d2 = this.getVelocity();
-				if (this.horizontalCollision && this.doesNotCollide(vec3d2.x, vec3d2.y + 0.6000000238418579D - this.getY() + e, vec3d2.z)) {
-					this.setVelocity(vec3d2.x, 0.30000001192092896D, vec3d2.z);
+				velocity = this.getVelocity();
+				Direction rotationGrav = Gravitation3.getRotation(this.wrCurrentYaw, this.wrCurrentPitch);
+				velocity = Gravitation3.rotateAligned(this.getVelocity(), rotationGrav, this.wrCurrentGravity);
+				Vec3d velocityToCheck = Gravitation3.revertAlignedRotation(velocity, rotationGrav, this.wrCurrentGravity); // vanilla velocity.x, velocity.y + 0.6D - this.getY() + e, velocity.z
+				if (this.horizontalCollision && this.doesNotCollide(velocityToCheck.x, velocityToCheck.y, velocityToCheck.z)) { // vanilla velocity.x, velocity.y + 0.6000000238418579D - this.getY() + e, velocity.z
+					velocity = new Vec3d(velocity.x, 0.3D, velocity.z);
+					this.setVelocity(Gravitation3.revertAlignedRotation(velocity, rotationGrav, this.wrCurrentGravity));// vanilla this.setVelocity(velocity.x, 0.30000001192092896D, velocity.z);
 				}
 			}
 		}
 
 		this.lastLimbDistance = this.limbDistance;
 		vanillaGravity = this.getX() - this.prevX;
+		gravityMultiplier = (vanillaGravity / 0.08D);
 		double z = this.getZ() - this.prevZ;
 		double aa = this instanceof Flutterer ? this.getY() - this.prevY : 0.0D;
-		g = MathHelper.sqrt(vanillaGravity * vanillaGravity + aa * aa + z * z) * 4.0F;
-		if (g > 1.0F) {
-			g = 1.0F;
+		yaYeet = MathHelper.sqrt(vanillaGravity * vanillaGravity + aa * aa + z * z) * 4.0F;
+		if (yaYeet > 1.0F) {
+			yaYeet = 1.0F;
 		}
 
-		this.limbDistance += (g - this.limbDistance) * 0.4F;
+		this.limbDistance += (yaYeet - this.limbDistance) * 0.4F;
 		this.limbAngle += this.limbDistance;
 	}
 
@@ -437,7 +455,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 
 		this.tickCramming();
 		this.world.getProfiler().pop();
-	} */
+	} //*/
 
 	@Shadow abstract protected void playBlockFallSound();
 	@Shadow abstract protected void tickNewAi();
@@ -468,6 +486,7 @@ public abstract class MixinLivingEntity extends Entity implements IShardbladeAff
 		this.wrCurrentYaw = yawCache;
 		this.wrCurrentPitch = pitchCache;
 		this.wrGravityVec = new Vec3d(x, y, z);
+//		this.setRotation(yawCache * 0.017453292F, pitchCache * 0.017453292F);
 	}
 
 	@Override

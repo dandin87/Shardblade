@@ -2,16 +2,16 @@ package tk.valoeghese.shardblade.mechanics.surgebinding;
 
 public enum SurgebindingOrder {
 	NONE(null, null, "None", 0),
-	BONDSMITH(Surge.TENSION, Surge.ADHESION, "Ishar", 1),
-	WINDRUNNER(Surge.ADHESION, Surge.GRAVITATION, "Jezrien", 2),
-	SKYBREAKER(Surge.GRAVITATION, Surge.DIVISION, "Nalan", 3),
-	DUSTBRINGER(Surge.DIVISION, Surge.ABRASION, "Chanarach", 4),
-	EDGEDANCER(Surge.ABRASION, Surge.PROGRESSION, "Vedel", 5),
-	TRUTHWATCHER(Surge.PROGRESSION, Surge.ILLUMINATION, "Paliah", 6),
-	LIGHTWEAVER(Surge.ILLUMINATION, Surge.TRANSFORMATION, "Shalash", 7),
-	ELSECALLER(Surge.TRANSFORMATION, Surge.TRANSPORTATION, "Batar", 8),
-	WILLSHAPER(Surge.TRANSPORTATION, Surge.COHESION, "Kalak", 9),
-	STONEWARD(Surge.COHESION, Surge.TENSION, "Talenel", 10);
+	WINDRUNNER(Surge.ADHESION, Surge.GRAVITATION, "Jezrien", 1),
+	SKYBREAKER(Surge.GRAVITATION, Surge.DIVISION, "Nalan", 2),
+	DUSTBRINGER(Surge.DIVISION, Surge.ABRASION, "Chanarach", 3),
+	EDGEDANCER(Surge.ABRASION, Surge.PROGRESSION, "Vedel", 4),
+	TRUTHWATCHER(Surge.PROGRESSION, Surge.ILLUMINATION, "Paliah", 5),
+	LIGHTWEAVER(Surge.ILLUMINATION, Surge.TRANSFORMATION, "Shalash", 6),
+	ELSECALLER(Surge.TRANSFORMATION, Surge.TRANSPORTATION, "Batar", 7),
+	WILLSHAPER(Surge.TRANSPORTATION, Surge.COHESION, "Kalak", 8),
+	STONEWARD(Surge.COHESION, Surge.TENSION, "Talenel", 9),
+	BONDSMITH(Surge.TENSION, Surge.ADHESION, "Ishar", 10);
 
 	private SurgebindingOrder(Surge surge0, Surge surge1, String herald, int id) {
 		this.surge0 = surge0;
